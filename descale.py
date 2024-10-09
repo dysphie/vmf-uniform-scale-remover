@@ -16,7 +16,6 @@ def recompile_model(mdl_path, scale):
 	suffix = get_suffix(scale)
 	qc_name = mdl_path.split('/')[-1].replace('.mdl', '.qc')
 
-	print(f'{crowbar_path} {mdl_path}')
 	subprocess.run([crowbar_path, 
 		'-p', mdl_path,
 		'-o', './scaled_qcs'
@@ -48,7 +47,6 @@ def process_vmf(vmf_path):
 
 			model_match = re.match(r'\s*"model"\s*"(.+)"', line)
 			if model_match:
-				print('found model ' + line)
 				model = model_match.group(1)
 				model_line = cur_line
 		
