@@ -1,4 +1,4 @@
-**Helper script to remove `uniformscale` from static props in VMF files.**
+**Helper script to convert `uniformscale` prop_static in VMF files to standard prop_static.**
 
 Useful for porting CSGO maps to games that don't support this feature.
 
@@ -9,21 +9,10 @@ Useful for porting CSGO maps to games that don't support this feature.
 - Run `./descaler.py path/to/map.vmf`
 
 This will:
-1. Create a new `.qc` file for each affected model, with the scale built-in. You can then use Crowbar to compile the new rescaled models.
+1. Create a new `.qc` file for each affected model in `./scaled_qcs`, with the scale built-in. 
 2. Generate a new VMF called `map_descaled.vmf` with fixed model references.
 
-For example:
-
-```json
-"model" "models/whatever.mdl"
-"uniformscale" "2.5"
-```
-
-Becomes:
-
-```json
-"model" "models/whatever_s2_5.mdl"
-```
+You can then use Crowbar to compile the new rescaled models.
 
 ## Requirements
 
