@@ -4,26 +4,25 @@ import os
 import sys
 import shutil
 
-crowbar_path = os.getenv('CROWBAR_PATH')
-assets_path = os.getenv('ASSETS_PATH')
-
-if not crowbar_path or not assets_path:
-    raise EnvironmentError("CROWBAR_PATH and ASSETS_PATH must be set")
+def read_assets(file_path):
+    with open(file_path, 'r') as f:
+        return [line.strip() for line in f if line.strip()]
 
 def get_suffix(scale):
     return f'_s{str(scale).replace(".", "_")}'
 
-def create_scaled_qc(mdl_path, scale):
+def create_scaled_qc(mdl_path, scale, assets):
     suffix = get_suffix(scale)
     directory, filename = os.path.split(mdl_path)
     qc_name = filename.replace('.mdl', '.qc')
     new_qc_name = filename.replace('.mdl', f'{suffix}.qc')
 
-    subprocess.run([
-        crowbar_path,
-        '-p', os.path.join(assets_path, mdl_path),
-        '-o', './original_qcs/'
-    ])
+    for asset_dir in assets:
+        subprocess.run([
+            'CrowbarCommandLineDecomp.exe',
+            '-p', os.path.join(asset_dir, mdl_path),
+            '-o', './original_qcs/'
+        ])
 
     with open(os.path.join('./original_qcs', qc_name), 'r') as qc:
         content = [f'$scale {scale}\n']
@@ -40,7 +39,7 @@ def create_scaled_qc(mdl_path, scale):
     with open(os.path.join(output_dir, new_qc_name), 'w') as new_qc:
         new_qc.writelines(content)
 
-def process_vmf(vmf_path):
+def process_vmf(vmf_path, assets):
     output_path = vmf_path.replace('.vmf', '_descaled.vmf')
 
     model = None
@@ -52,7 +51,6 @@ def process_vmf(vmf_path):
         for cur_line, line in enumerate(lines):
             model_match = re.match(r'\s*"model"\s*"(.+)"', line)
             if model_match:
-                print('found model ' + line)
                 model = model_match.group(1)
                 model_line = cur_line
 
@@ -60,7 +58,7 @@ def process_vmf(vmf_path):
             if scale_match:
                 scale = scale_match.group(1)
 
-                create_scaled_qc(model, scale)
+                create_scaled_qc(model, scale, assets)
 
                 suffix = get_suffix(scale)
                 lines[model_line] = lines[model_line].replace('.mdl', f'{suffix}.mdl')
@@ -73,6 +71,12 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit(1)
 
+    assets_file_path = 'assets.txt'
+    assets = read_assets(assets_file_path)
+
+    if not assets:
+        raise ValueError("No asset directories found in assets.txt")
+
     vmf_path = sys.argv[1]
-    process_vmf(vmf_path)
+    process_vmf(vmf_path, assets)
     shutil.rmtree('./original_qcs')
