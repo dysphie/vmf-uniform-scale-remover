@@ -3,16 +3,13 @@
 Useful for porting CSGO maps to games that don't support this feature.
 
 # Usage
+- Ensure that `CrowbarCommandLineDecomp.exe` is included in your system's PATH.
+- Create an `assets.txt` file that lists the asset folders to scan (each folder must contain a `models` subfolder).
+- Run the script using the command: `./descaler.py path/to/map.vmf`.
 
-- Set the `CROWBAR_PATH` env var to point to `CrowbarCommandLineDecomp.exe`.
-- Set the `ASSETS_PATH` env var to point to the folder where your assets are located.
-- Run `./descaler.py path/to/map.vmf`
+This will generate a new .qc file for each affected model and create a new VMF `*_descaled.vmf` with patched model references
 
-This will:
-1. Create a new `.qc` file for each affected model in `./scaled_qcs`, with the scale built-in. 
-2. Generate a new VMF called `map_descaled.vmf` with fixed model references.
-
-You can then use Crowbar to compile the new rescaled models.
+You can then use Crowbar to bulk compile the `scaled_qcs` folder 
 
 ## Requirements
 
