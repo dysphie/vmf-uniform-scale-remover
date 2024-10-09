@@ -12,26 +12,41 @@ assets_path = os.getenv('ASSETS_PATH')
 def get_suffix(scale):
 	return '_s' + str(scale).replace('.', '_')
 
-def recompile_model(mdl_path, scale):
+def create_scaled_qc(mdl_path, scale):
+
 	suffix = get_suffix(scale)
-	qc_name = mdl_path.split('/')[-1].replace('.mdl', '.qc')
+
+	directory, filename = os.path.split(mdl_path)
+	qc_name = filename.replace('.mdl', '.qc')
+	new_qc_name = filename.replace('.mdl', suffix + '.qc')
+
+	print(f'''
+		mdl_path = {mdl_path}
+		directory = {directory}
+		qc_name = {qc_name}
+		new_qc_name = {new_qc_name}
+		'''
+	)
 
 	subprocess.run([crowbar_path, 
-		'-p', mdl_path,
-		'-o', './scaled_qcs'
+		'-p', assets_path + '/' + mdl_path,
+		'-o', './temp/'
 	])
 	
-	with open('./scaled_qcs/' + qc_name, 'r+') as qc:
+	with open('./temp/' + qc_name, 'r') as qc:
 		content = [f'$scale {scale}\n']
 		for line in qc.readlines():
 			if '$bbox' in line:
 				line = f'// {line}'
 			elif '$modelname' in line:
-				line = line.replace('.mdl', f'{suffix}.mdl')
+				line = line.replace('.mdl', suffix + '.mdl')
 			content.append(line)
-		qc.seek(0)
-		qc.truncate()
-		qc.writelines(content)
+
+	output_dir = './scaled_qcs/' + directory
+	os.makedirs(output_dir, exist_ok=True)
+
+	with open(output_dir + '/' + new_qc_name, 'w') as new_qc:
+		new_qc.writelines(content)
 
 def process_vmf(vmf_path):
 
@@ -47,6 +62,7 @@ def process_vmf(vmf_path):
 
 			model_match = re.match(r'\s*"model"\s*"(.+)"', line)
 			if model_match:
+				print('found model ' + line)
 				model = model_match.group(1)
 				model_line = cur_line
 		
@@ -54,7 +70,7 @@ def process_vmf(vmf_path):
 			if scale_match:
 				scale = scale_match.group(1)
 				
-				recompile_model(f'{assets_path}/{model}', scale)
+				create_scaled_qc(model, scale)
 
 				suffix = get_suffix(scale)
 				lines[model_line] = lines[model_line].replace('.mdl', f'{suffix}.mdl')
