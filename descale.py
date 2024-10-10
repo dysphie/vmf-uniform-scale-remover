@@ -56,9 +56,10 @@ def process_vmf(vmf_path, assets):
 				model = model_match.group(1)
 				model_line = cur_line
 
-			scale_match = re.match(r'\s*"uniformscale"\s*"([^1].*)"', line)
+			scale_match = re.match(r'\s*"uniformscale"\s*"(.+)"', line)
 			if scale_match:
-				scale = scale_match.group(1)
+				scale = float(scale_match.group(1))
+				if scale == 1: continue
 
 				create_scaled_qc(model, scale, assets)
 
